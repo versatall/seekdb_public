@@ -19,6 +19,7 @@ MODULES = {
         "features": FEATURES,
     },
     "regex-engine": {"bridge": "src/bridge.rs"},
+    "sql-parser": {"bridge": "src/bridge.rs"},
     "uuid-generator": {"bridge": "src/bridge.rs"},
     "in-process": {
         "bridge": "src/bridge.rs",

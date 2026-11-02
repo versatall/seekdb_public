@@ -19,4 +19,6 @@ pub use local as local_storage;
 pub use logger::*;
 pub use regex_engine;
 pub use sql_nio as network;
+#[cfg(feature = "plugins")]
+pub use seekdb_plugin_runtime::*;
 pub use uuid_generator;

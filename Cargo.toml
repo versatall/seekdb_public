@@ -2,7 +2,8 @@
 # (OceanBase-lite) C++ server. In-tree path dependencies are members automatically.
 [workspace]
 resolver = "2"
-members = ["rust/seekdb-rust"]
+members = ["rust/seekdb-rust", "rust/seekdb-host"]
+exclude = ["rust/extension-sdk"]
 
 [profile.release]
 opt-level = 3

@@ -34,6 +34,20 @@ load(
 
 declare_share_semantic_header_targets()
 
+cc_library(
+    name = "plugin_interface",
+    hdrs = glob(["plugin/*.h"]) + [
+        "rc/ob_module_provider.h",
+        "geo/srs_metadata_adapter.h",
+        "schema/routine_catalog_transaction.h",
+        "schema/catalog_operation_recorder.h",
+        "schema/catalog_commit_preparation.h",
+        "schema/routine_cache_invalidation.h",
+    ],
+    deps = ["//src/oblib:oblib_foundation", "//src/oblib:oblib_mysql_protocol"],
+    visibility = ["//src:__subpackages__"],
+)
+
 _VECTOR_UNITY_GROUP = select_unity_sources(
     SHARE_UNITY_GROUPS,
     "vector",
@@ -106,6 +120,7 @@ cc_library(
         "ob_ls_id.h",
     ],
     deps = [
+        ":plugin_interface",
         ":error_codes",
         "//src/oblib:oblib_base",
         "//src/oblib:oblib_foundation",
@@ -1782,10 +1797,21 @@ cc_library(
 
 
 _SHARE_RUNTIME_UNITY_GROUPS = remaining_unity_groups(
-    SHARE_UNITY_GROUPS,
+    [group for group in SHARE_UNITY_GROUPS if not group.name.startswith("ob_share_geo")],
     _SHARE_NATIVE_UNITY_SOURCES,
 ) + singleton_unity_groups(
-    SHARE_STANDALONE_SOURCES,
+    [source for source in SHARE_STANDALONE_SOURCES if not source.startswith("src/share/geo/")] + [
+        "src/share/geo/srs_metadata_adapter.cpp",
+        "src/share/geo/ob_geo_plugin_stubs.cpp",
+        "src/share/geo/spatial_index_plugin.cpp",
+        "src/share/geo/srs_plugin.cpp",
+        "src/share/schema/routine_catalog_transaction.cpp",
+        "src/share/plugin/extension_package.cpp",
+        "src/share/plugin/ob_plugin_catalog.cpp",
+        "src/share/plugin/ob_plugin_loader.cpp",
+        "src/share/plugin/ob_plugin_registry.cpp",
+        "src/share/plugin/ob_plugin_sql_catalog.cpp",
+    ],
     "share_runtime_standalone",
 )
 
@@ -1799,6 +1825,7 @@ grouped_unity_cc_library(
     implementation_deps = [
         ":_share_implementation_headers",
         "//rust:config_headers",
+        "//rust:seekdb_rust_host_headers",
     ] + _SHARE_RUNTIME_COMPILE_DEPS + [
         "//src/oblib:common_sql_mode",
         "//src/oblib:oblib_base",
@@ -1816,18 +1843,8 @@ grouped_unity_cc_library(
     visibility = ["//src/share:__pkg__"],
 )
 
-grouped_unity_cc_library(
+cc_library(
     name = "share_runtime_c",
-    unity_groups = select_unity_groups(
-        SHARE_UNITY_GROUPS,
-        ["ob_share_geo_1"],
-        language = "c",
-    ),
-    language = "c",
-    implementation_deps = [
-        ":geo_serialization",
-        "//bazel/third_party:protobuf_c_headers",
-    ],
     tags = ["manual"],
     visibility = ["//src/share:__pkg__"],
 )
